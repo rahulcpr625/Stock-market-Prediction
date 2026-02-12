@@ -1,0 +1,1891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Trend Prediction</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            cursor: default !important;
+        }
+
+        body {
+            cursor: default !important;
+            font-family: 'Poppins', sans-serif;
+            background: #0a0a0a;
+            min-height: 100vh;
+            padding: 20px 0;
+            overflow-x: hidden;
+            position: relative;
+            perspective: 1000px;
+        }
+
+        /* Matrix Rain Effect */
+        .matrix-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            opacity: 0.15;
+        }
+
+        .matrix-column {
+            position: absolute;
+            top: -100%;
+            width: 20px;
+            color: #00ff88;
+            font-size: 12px;
+            text-align: center;
+            animation: matrixRain linear infinite;
+            text-shadow: 0 0 5px #00ff88;
+        }
+
+        @keyframes matrixRain {
+            0% {
+                transform: translateY(-100%);
+            }
+            100% {
+                transform: translateY(100vh);
+            }
+        }
+
+        /* Floating Elements */
+        .floating-elements-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .floating-element {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.15);
+            font-size: 14px;
+            pointer-events: none;
+            animation: float 20s linear infinite;
+            white-space: nowrap;
+        }
+
+        .floating-element.symbol {
+            font-weight: bold;
+            color: rgba(0, 255, 136, 0.2);
+        }
+
+        .floating-element.number {
+            font-family: monospace;
+        }
+
+        .floating-element.trend {
+            font-size: 24px;
+            opacity: 0.1;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translate(100vw, -50%);
+            }
+            100% {
+                transform: translate(-100%, -50%);
+            }
+        }
+
+        /* Glowing Orbs */
+        .orbs-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(20px);
+            animation: orbFloat 15s ease-in-out infinite;
+            opacity: 0.15;
+        }
+
+        @keyframes orbFloat {
+            0%, 100% {
+                transform: translate(0, 0);
+            }
+            25% {
+                transform: translate(50px, 50px);
+            }
+            50% {
+                transform: translate(-50px, 100px);
+            }
+            75% {
+                transform: translate(-100px, -50px);
+            }
+        }
+
+        /* Background Animation */
+        .background-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.05;
+        }
+
+        .grid-line {
+            position: absolute;
+            background: linear-gradient(90deg, transparent, rgba(0, 255, 136, 0.2), transparent);
+            animation: gridMove 8s linear infinite;
+        }
+
+        .grid-line-vertical {
+            width: 1px;
+            height: 100%;
+        }
+
+        .grid-line-horizontal {
+            width: 100%;
+            height: 1px;
+        }
+
+        @keyframes gridMove {
+            0% {
+                transform: translateY(-100%);
+            }
+            100% {
+                transform: translateY(100%);
+            }
+        }
+
+        /* News Ticker */
+        .news-ticker {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 0;
+            z-index: 1000;
+            border-top: 1px solid rgba(0, 255, 136, 0.3);
+        }
+
+        .news-ticker-content {
+            display: flex;
+            gap: 50px;
+            white-space: nowrap;
+            animation: tickerMove 30s linear infinite;
+        }
+
+        .news-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .news-item i {
+            color: #00ff88;
+        }
+
+        @keyframes tickerMove {
+            0% {
+                transform: translateX(100%);
+            }
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        a, button, input, .card {
+            cursor: pointer !important;
+        }
+
+        /* Stock Market Cursor Effect */
+        .stock-cursor {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        .stock-value {
+            position: absolute;
+            font-size: 12px;
+            font-family: monospace;
+            color: #fff;
+            text-shadow: 0 0 5px rgba(0,0,0,0.5);
+            opacity: 0;
+            transform: scale(0);
+            animation: stockAppear 3s ease-in-out forwards;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .stock-value.positive {
+            color: #00ff00;
+            text-shadow: 0 0 5px rgba(0,255,0,0.3);
+        }
+
+        .stock-value.negative {
+            color: #ff0000;
+            text-shadow: 0 0 5px rgba(255,0,0,0.3);
+        }
+
+        .stock-symbol {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .stock-arrow {
+            margin: 0 3px;
+        }
+
+        .stock-percent {
+            font-size: 10px;
+            opacity: 0.8;
+        }
+
+        @keyframes stockAppear {
+            0% {
+                opacity: 0;
+                transform: scale(0) translateY(0);
+            }
+            50% { /* Slow phase for 1.5 seconds */
+                opacity: 0.5;
+                transform: scale(1) translateY(-10px);
+            }
+            60% { /* Start of fast phase */
+                opacity: 0.8;
+                transform: scale(1.2) translateY(-15px);
+            }
+            100% { /* Fast movement to final position */
+                opacity: 0;
+                transform: scale(0.8) translateY(-50px) translateX(var(--final-x));
+            }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin-top: 30px;
+            position: relative;
+            z-index: 1;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        h1 {
+            color: white;
+            font-weight: 600;
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        .form-control {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            padding: 12px;
+        }
+
+        .form-control:focus {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #00ff88;
+            color: white;
+            box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.2);
+        }
+
+        .btn-primary {
+            position: relative;
+            overflow: hidden;
+            background: linear-gradient(45deg, #0d6efd, #0099ff);
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary.processing {
+            pointer-events: none;
+            opacity: 0.8;
+        }
+
+        .btn-primary.processing::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 200%;
+            height: 100%;
+            background: linear-gradient(90deg, 
+                transparent,
+                rgba(255, 255, 255, 0.2),
+                transparent
+            );
+            animation: btnShine 1.5s linear infinite;
+        }
+
+        .chart-container {
+            margin-top: 30px;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chart-title {
+            position: absolute;
+            top: -25px;
+            left: 10px;
+            color: rgba(0, 255, 136, 0.8);
+            font-size: 12px;
+            font-family: monospace;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .img-fluid {
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Candlestick Background Animation */
+        .candlestick-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            opacity: 0.1;
+            display: flex;
+            justify-content: space-around;
+            padding: 20px;
+        }
+
+        .candlestick-column {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            height: 100%;
+        }
+
+        .candlestick {
+            position: relative;
+            width: 8px;
+            height: 40px;
+            background: #00ff88;
+            opacity: 0;
+            transform-origin: center;
+            animation: candlestickAppear 4s infinite;
+        }
+
+        .candlestick::before,
+        .candlestick::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            width: 2px;
+            background: #00ff88;
+        }
+
+        .candlestick::before {
+            top: -15px;
+            height: 15px;
+        }
+
+        .candlestick::after {
+            bottom: -15px;
+            height: 15px;
+        }
+
+        .candlestick.bearish {
+            background: #ff4d4d;
+        }
+
+        .candlestick.bearish::before,
+        .candlestick.bearish::after {
+            background: #ff4d4d;
+        }
+
+        @keyframes candlestickAppear {
+            0% {
+                opacity: 0;
+                transform: scaleY(0);
+            }
+            20% {
+                opacity: 1;
+                transform: scaleY(1);
+            }
+            80% {
+                opacity: 1;
+                transform: scaleY(1);
+            }
+            100% {
+                opacity: 0;
+                transform: scaleY(0);
+            }
+        }
+
+        /* Wave Chart Animation */
+        .wave-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            opacity: 0.1;
+        }
+
+        .wave {
+            position: absolute;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #00ff88, transparent);
+            animation: waveMove 8s linear infinite;
+        }
+
+        .wave.bearish {
+            background: linear-gradient(90deg, transparent, #ff4d4d, transparent);
+        }
+
+        @keyframes waveMove {
+            0% {
+                transform: translateY(-100%) scaleY(0);
+            }
+            50% {
+                transform: translateY(50vh) scaleY(1);
+            }
+            100% {
+                transform: translateY(200%) scaleY(0);
+            }
+        }
+
+        /* Price Points Animation */
+        .price-points-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            opacity: 0.1;
+        }
+
+        .price-point {
+            position: absolute;
+            font-family: monospace;
+            font-size: 12px;
+            color: #00ff88;
+            opacity: 0;
+            animation: priceFloat 4s ease-out infinite;
+            white-space: nowrap;
+        }
+
+        .price-point.up::before {
+            content: '▲';
+            margin-right: 4px;
+        }
+
+        .price-point.down {
+            color: #ff4d4d;
+        }
+
+        .price-point.down::before {
+            content: '▼';
+            margin-right: 4px;
+        }
+
+        @keyframes priceFloat {
+            0% {
+                opacity: 0;
+                transform: translate(0, 0) scale(0.5);
+            }
+            20% {
+                opacity: 1;
+                transform: translate(var(--tx), var(--ty)) scale(1);
+            }
+            80% {
+                opacity: 1;
+                transform: translate(var(--tx), var(--ty)) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(var(--tx), calc(var(--ty) - 50px)) scale(0.5);
+            }
+        }
+
+        /* Trading Volume Bars */
+        .volume-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            opacity: 0.1;
+        }
+
+        .volume-bar {
+            position: absolute;
+            bottom: 0;
+            width: 4px;
+            background: #00ff88;
+            opacity: 0.2;
+            transform-origin: bottom;
+            animation: volumePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes volumePulse {
+            0%, 100% {
+                transform: scaleY(0.3);
+            }
+            50% {
+                transform: scaleY(1);
+            }
+        }
+
+        /* Market Indicators */
+        .indicators-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            opacity: 0.1;
+        }
+
+        .market-indicator {
+            position: absolute;
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.15);
+            animation: indicatorFade 6s linear infinite;
+            white-space: nowrap;
+        }
+
+        @keyframes indicatorFade {
+            0% {
+                opacity: 0;
+                transform: translateX(100vw) scale(0.8);
+            }
+            10% {
+                opacity: 1;
+                transform: translateX(80vw) scale(1);
+            }
+            90% {
+                opacity: 1;
+                transform: translateX(20vw) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateX(0) scale(0.8);
+            }
+        }
+
+        /* Advanced Candlestick Animation */
+        .candlestick-background {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background: #0a0a0a;
+            overflow: hidden;
+        }
+
+        .candlestick-row {
+            position: absolute;
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            height: 150px;
+            opacity: 0.15;
+            transform: scale(0.8);
+            transition: all 0.5s ease;
+        }
+
+        .candlestick-row:hover {
+            opacity: 0.3;
+            transform: scale(1);
+        }
+
+        .candlestick-group {
+            display: flex;
+            align-items: center;
+            margin: 0 2px;
+        }
+
+        .candlestick-item {
+            position: relative;
+            width: 8px;
+            margin: 0 1px;
+            animation: candlestickForm 1s ease-out forwards;
+        }
+
+        .candlestick-body {
+            position: absolute;
+            width: 100%;
+            background: #00ff88;
+            transform-origin: 50% 50%;
+            animation: bodyPulse 2s infinite;
+        }
+
+        .candlestick-body.bearish {
+            background: #ff4d4d;
+        }
+
+        .candlestick-wick {
+            position: absolute;
+            width: 2px;
+            left: 3px;
+            background: currentColor;
+        }
+
+        .candlestick-wick.top {
+            top: 0;
+            transform-origin: bottom;
+        }
+
+        .candlestick-wick.bottom {
+            bottom: 0;
+            transform-origin: top;
+        }
+
+        .volume-indicator {
+            position: absolute;
+            bottom: -20px;
+            width: 100%;
+            height: 15px;
+            transform-origin: bottom;
+            opacity: 0.3;
+            animation: volumePulse 1.5s ease-in-out infinite;
+        }
+
+        .price-label {
+            position: absolute;
+            font-family: monospace;
+            font-size: 10px;
+            color: currentColor;
+            white-space: nowrap;
+            opacity: 0;
+            transform: translateX(-50%);
+            animation: labelFade 2s ease-out forwards;
+        }
+
+        .time-label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.3);
+            white-space: nowrap;
+        }
+
+        @keyframes candlestickForm {
+            0% {
+                transform: scaleY(0);
+                opacity: 0;
+            }
+            100% {
+                transform: scaleY(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes bodyPulse {
+            0%, 100% {
+                transform: scaleX(1);
+            }
+            50% {
+                transform: scaleX(1.2);
+            }
+        }
+
+        @keyframes volumePulse {
+            0%, 100% {
+                transform: scaleY(0.8);
+                opacity: 0.2;
+            }
+            50% {
+                transform: scaleY(1.2);
+                opacity: 0.4;
+            }
+        }
+
+        @keyframes labelFade {
+            0% {
+                opacity: 0;
+                transform: translateX(-50%) translateY(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* 3D Grid Animation */
+        .market-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            transform-style: preserve-3d;
+            animation: gridRotate 60s linear infinite;
+        }
+
+        .grid-plane {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            left: -50%;
+            top: -50%;
+            background: linear-gradient(90deg, 
+                rgba(0, 255, 136, 0.1) 1px, 
+                transparent 1px
+            ),
+            linear-gradient(rgba(0, 255, 136, 0.1) 1px, 
+                transparent 1px
+            );
+            background-size: 50px 50px;
+            transform: rotateX(60deg);
+            animation: gridMove 20s linear infinite;
+        }
+
+        @keyframes gridRotate {
+            0% {
+                transform: rotateY(0deg);
+            }
+            100% {
+                transform: rotateY(360deg);
+            }
+        }
+
+        @keyframes gridMove {
+            0% {
+                transform: rotateX(60deg) translateY(0);
+            }
+            100% {
+                transform: rotateX(60deg) translateY(50px);
+            }
+        }
+
+        /* Data Streams */
+        .data-stream {
+            position: absolute;
+            color: rgba(0, 255, 136, 0.6);
+            font-family: monospace;
+            font-size: 12px;
+            white-space: nowrap;
+            animation: streamFloat linear infinite;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.4);
+        }
+
+        .data-stream.price {
+            color: rgba(0, 255, 136, 0.8);
+            font-weight: bold;
+        }
+
+        .data-stream.volume {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .data-stream.indicator {
+            color: rgba(255, 77, 77, 0.6);
+        }
+
+        @keyframes streamFloat {
+            0% {
+                transform: translate3d(100vw, 0, 0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translate3d(-100vw, 0, 0);
+                opacity: 0;
+            }
+        }
+
+        /* Market Pulses */
+        .market-pulse {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(0, 255, 136, 0.8);
+            animation: pulseEffect 2s ease-out infinite;
+        }
+
+        .market-pulse.bearish {
+            background: rgba(255, 77, 77, 0.8);
+        }
+
+        @keyframes pulseEffect {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(20);
+                opacity: 0;
+            }
+        }
+
+        /* Trend Lines */
+        .trend-line {
+            position: absolute;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                transparent,
+                rgba(0, 255, 136, 0.4),
+                transparent
+            );
+            animation: trendMove 8s linear infinite;
+            transform-origin: left;
+        }
+
+        .trend-line.bearish {
+            background: linear-gradient(90deg, 
+                transparent,
+                rgba(255, 77, 77, 0.4),
+                transparent
+            );
+        }
+
+        @keyframes trendMove {
+            0% {
+                transform: scaleX(0);
+                opacity: 0;
+            }
+            50% {
+                transform: scaleX(1);
+                opacity: 1;
+            }
+            100% {
+                transform: scaleX(0);
+                opacity: 0;
+            }
+        }
+
+        /* Real-time Candlestick Effect */
+        .live-chart {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            opacity: 0.15;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 20px;
+        }
+
+        .chart-column {
+            width: 300px;
+            height: 200px;
+            position: relative;
+            margin: 10px;
+            border: 1px solid rgba(0, 255, 136, 0.1);
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+        }
+
+        .candlestick-wrapper {
+            display: flex;
+            align-items: flex-end;
+            height: 100%;
+            position: relative;
+        }
+
+        .candlestick {
+            width: 8px;
+            margin: 0 2px;
+            position: relative;
+            animation: appear 0.5s ease-out forwards;
+        }
+
+        .candlestick-body {
+            width: 100%;
+            position: absolute;
+            bottom: 0;
+            background: #00ff88;
+            transition: all 0.3s ease;
+        }
+
+        .candlestick-body.red {
+            background: #ff4d4d;
+        }
+
+        .candlestick-wick {
+            width: 2px;
+            background: currentColor;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .candlestick-wick.top {
+            top: 0;
+        }
+
+        .candlestick-wick.bottom {
+            bottom: 0;
+        }
+
+        /* Processing Animation */
+        .processing-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .processing-content {
+            text-align: center;
+            color: #fff;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(0, 255, 136, 0.2);
+        }
+
+        .processing-spinner {
+            width: 80px;
+            height: 80px;
+            border: 4px solid rgba(0, 255, 136, 0.1);
+            border-top-color: #00ff88;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        .processing-text {
+            font-size: 20px;
+            margin-bottom: 20px;
+            color: #00ff88;
+            font-weight: 500;
+        }
+
+        .processing-steps {
+            text-align: left;
+            margin-top: 20px;
+        }
+
+        .step {
+            margin: 12px 0;
+            opacity: 0.5;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .step::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: currentColor;
+            border-radius: 50%;
+            margin-right: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .step.active {
+            opacity: 1;
+            color: #00ff88;
+        }
+
+        .step.active::before {
+            background: #00ff88;
+            box-shadow: 0 0 10px #00ff88;
+        }
+
+        @keyframes appear {
+            from {
+                transform: scaleY(0);
+                opacity: 0;
+            }
+            to {
+                transform: scaleY(1);
+                opacity: 1;
+            }
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes btnShine {
+            to {
+                transform: translateX(100%);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Matrix Background -->
+    <div class="matrix-background" id="matrixBackground"></div>
+
+    <!-- Floating Elements Container -->
+    <div class="floating-elements-container" id="floatingElements"></div>
+
+    <!-- Glowing Orbs -->
+    <div class="orbs-container" id="orbsContainer"></div>
+
+    <!-- Candlestick Background -->
+    <div class="candlestick-background" id="candlestickBackground"></div>
+
+    <!-- Wave Charts -->
+    <div class="wave-container" id="waveContainer"></div>
+
+    <!-- Price Points -->
+    <div class="price-points-container" id="pricePointsContainer"></div>
+
+    <!-- Volume Bars -->
+    <div class="volume-container" id="volumeContainer"></div>
+
+    <!-- Market Indicators -->
+    <div class="indicators-container" id="indicatorsContainer"></div>
+
+    <!-- Existing background animation -->
+    <div class="background-animation" id="backgroundAnimation"></div>
+
+    <!-- News Ticker -->
+    <div class="news-ticker">
+        <div class="news-ticker-content" id="newsTicker">
+            <!-- News items will be dynamically added here -->
+        </div>
+    </div>
+
+    <div class="stock-cursor"></div>
+
+    <!-- 3D Market Grid -->
+    <div class="market-grid">
+        <div class="grid-plane"></div>
+    </div>
+
+    <!-- Dynamic Elements Container -->
+    <div id="marketElements" class="market-elements"></div>
+
+    <!-- Live Chart Background -->
+    <div class="live-chart" id="liveChart"></div>
+
+    <!-- Processing Overlay -->
+    <div class="processing-overlay" id="processingOverlay">
+        <div class="processing-content">
+            <div class="processing-spinner"></div>
+            <div class="processing-text">Analyzing Stock Data</div>
+            <div class="processing-steps">
+                <div class="step" data-step="1">Loading Historical Data...</div>
+                <div class="step" data-step="2">Calculating Technical Indicators...</div>
+                <div class="step" data-step="3">Training ML Model...</div>
+                <div class="step" data-step="4">Generating Predictions...</div>
+                <div class="step" data-step="5">Preparing Visualization...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <h1><i class="fas fa-chart-line me-2"></i>Stock Trend Prediction</h1>
+            <form method="POST" id="stockForm">
+                <div class="mb-4">
+                    <label for="stock" class="form-label text-white">Enter Stock Ticker:</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" id="stock" name="stock" value="POWERGRID.NS" placeholder="Enter stock symbol...">
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-analytics me-2"></i>Analyze Stock
+                </button>
+            </form>
+        </div>
+        
+        {% if plot_path_ema_20_50 %}
+        <div class="card chart-container">
+            <h3 class="chart-title"><i class="fas fa-chart-area me-2"></i>Closing Price vs Time (20 & 50 Days EMA)</h3>
+            <img src="{{ url_for('static', filename='ema_20_50.png') }}" class="img-fluid" alt="EMA 20 & 50">
+        </div>
+        {% endif %}
+        
+        {% if plot_path_ema_100_200 %}
+        <div class="card chart-container">
+            <h3 class="chart-title"><i class="fas fa-chart-line me-2"></i>Closing Price vs Time (100 & 200 Days EMA)</h3>
+            <img src="{{ url_for('static', filename='ema_100_200.png') }}" class="img-fluid" alt="EMA 100 & 200">
+        </div>
+        {% endif %}
+        
+        {% if plot_path_prediction %}
+        <div class="card chart-container">
+            <h3 class="chart-title"><i class="fas fa-robot me-2"></i>Prediction vs Original Trend</h3>
+            <img src="{{ url_for('static', filename='stock_prediction.png') }}" class="img-fluid" alt="Prediction vs Original">
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Candlestick Animation
+        function createCandlestickColumns() {
+            const container = document.getElementById('candlestickContainer');
+            const numColumns = 15; // Number of columns across the screen
+
+            for (let i = 0; i < numColumns; i++) {
+                const column = document.createElement('div');
+                column.className = 'candlestick-column';
+                
+                // Create 8 candlesticks per column
+                for (let j = 0; j < 8; j++) {
+                    const candlestick = document.createElement('div');
+                    candlestick.className = 'candlestick';
+                    
+                    // Randomly determine if bullish or bearish
+                    if (Math.random() > 0.5) {
+                        candlestick.classList.add('bearish');
+                    }
+                    
+                    // Random height
+                    const height = 20 + Math.random() * 60;
+                    candlestick.style.height = `${height}px`;
+                    
+                    // Random animation delay
+                    const delay = Math.random() * 4;
+                    candlestick.style.animationDelay = `${delay}s`;
+                    
+                    // Random wick lengths
+                    const topWickHeight = 5 + Math.random() * 20;
+                    const bottomWickHeight = 5 + Math.random() * 20;
+                    candlestick.style.setProperty('--top-wick', `${topWickHeight}px`);
+                    candlestick.style.setProperty('--bottom-wick', `${bottomWickHeight}px`);
+                    
+                    column.appendChild(candlestick);
+                }
+                
+                container.appendChild(column);
+            }
+        }
+
+        // Update candlesticks periodically
+        function updateCandlesticks() {
+            const candlesticks = document.querySelectorAll('.candlestick');
+            candlesticks.forEach(candlestick => {
+                // Randomly change between bullish and bearish
+                if (Math.random() > 0.5) {
+                    candlestick.classList.toggle('bearish');
+                }
+                
+                // Update height
+                const height = 20 + Math.random() * 60;
+                candlestick.style.height = `${height}px`;
+                
+                // Update wick lengths
+                const topWickHeight = 5 + Math.random() * 20;
+                const bottomWickHeight = 5 + Math.random() * 20;
+                candlestick.style.setProperty('--top-wick', `${topWickHeight}px`);
+                candlestick.style.setProperty('--bottom-wick', `${bottomWickHeight}px`);
+            });
+        }
+
+        // Initialize candlestick background
+        document.addEventListener('DOMContentLoaded', () => {
+            createCandlestickColumns();
+            // Update candlesticks every 4 seconds
+            setInterval(updateCandlesticks, 4000);
+            
+            // Existing initialization code
+            createGridLines();
+            updateNewsTicker();
+        });
+
+        // Background Animation
+        function createGridLines() {
+            const container = document.getElementById('backgroundAnimation');
+            const numLines = 20;
+
+            for (let i = 0; i < numLines; i++) {
+                // Create vertical lines
+                const vLine = document.createElement('div');
+                vLine.className = 'grid-line grid-line-vertical';
+                vLine.style.left = `${(i / numLines) * 100}%`;
+                vLine.style.animationDelay = `${Math.random() * 8}s`;
+                container.appendChild(vLine);
+
+                // Create horizontal lines
+                const hLine = document.createElement('div');
+                hLine.className = 'grid-line grid-line-horizontal';
+                hLine.style.top = `${(i / numLines) * 100}%`;
+                hLine.style.animationDelay = `${Math.random() * 8}s`;
+                container.appendChild(hLine);
+            }
+        }
+
+        // News Ticker Data
+        const newsItems = [
+            { icon: 'chart-line', text: 'S&P 500 reaches new all-time high amid strong earnings reports' },
+            { icon: 'building', text: 'Tech giants lead market rally as AI investments surge' },
+            { icon: 'dollar-sign', text: 'Federal Reserve signals potential rate cuts in coming months' },
+            { icon: 'globe', text: 'Global markets respond positively to trade agreement developments' },
+            { icon: 'microchip', text: 'Semiconductor stocks soar on increased demand forecast' },
+            { icon: 'chart-pie', text: 'Market volatility index drops to lowest level in 6 months' },
+            { icon: 'industry', text: 'Manufacturing sector shows strong recovery in Q2' },
+            { icon: 'coins', text: 'Cryptocurrency market sees renewed institutional interest' }
+        ];
+
+        function updateNewsTicker() {
+            const ticker = document.getElementById('newsTicker');
+            const newsHtml = newsItems.map(item => `
+                <div class="news-item">
+                    <i class="fas fa-${item.icon}"></i>
+                    <span>${item.text}</span>
+                </div>
+            `).join('');
+            ticker.innerHTML = newsHtml + newsHtml; // Duplicate for seamless loop
+        }
+
+        // Stock market data
+        const stockSymbols = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'META', 'NFLX', 'NVDA'];
+        const stockPrices = {
+            AAPL: { base: 150, range: 5 },
+            GOOGL: { base: 2800, range: 50 },
+            MSFT: { base: 290, range: 8 },
+            AMZN: { base: 3200, range: 100 },
+            TSLA: { base: 750, range: 25 },
+            META: { base: 330, range: 10 },
+            NFLX: { base: 520, range: 15 },
+            NVDA: { base: 280, range: 12 }
+        };
+
+        // Stock cursor initialization
+        const stockCursor = document.querySelector('.stock-cursor');
+        let lastX = 0;
+        let lastY = 0;
+        let lastCreationTime = 0;
+        const creationInterval = 100; // Create effect every 100ms
+
+        // Generate random stock data
+        function generateStockData() {
+            const symbol = stockSymbols[Math.floor(Math.random() * stockSymbols.length)];
+            const stockInfo = stockPrices[symbol];
+            const change = (Math.random() * stockInfo.range * 2) - stockInfo.range;
+            const price = stockInfo.base + change;
+            const percent = (change / stockInfo.base) * 100;
+            
+            return {
+                symbol,
+                price: price.toFixed(2),
+                change: change.toFixed(2),
+                percent: percent.toFixed(2),
+                isPositive: change > 0
+            };
+        }
+
+        // Create stock value element
+        function createStockValue(x, y) {
+            const stock = generateStockData();
+            const element = document.createElement('div');
+            element.className = `stock-value ${stock.isPositive ? 'positive' : 'negative'}`;
+            element.innerHTML = `
+                <span class="stock-symbol">${stock.symbol}</span>
+                $${stock.price}
+                <span class="stock-arrow">${stock.isPositive ? '↑' : '↓'}</span>
+                <span class="stock-percent">${stock.isPositive ? '+' : ''}${stock.percent}%</span>
+            `;
+            
+            // Random final position for fast movement
+            const finalX = (Math.random() - 0.5) * 100;
+            element.style.setProperty('--final-x', `${finalX}px`);
+            
+            // Position the element
+            element.style.left = x + 'px';
+            element.style.top = y + 'px';
+            
+            stockCursor.appendChild(element);
+
+            // Remove element after animation completes
+            setTimeout(() => {
+                element.remove();
+            }, 3000); // Match the animation duration
+        }
+
+        // Mouse movement handler
+        document.addEventListener('mousemove', (e) => {
+            const currentTime = Date.now();
+            const x = e.clientX;
+            const y = e.clientY;
+
+            // Create stock values at regular intervals
+            if (currentTime - lastCreationTime > creationInterval) {
+                createStockValue(x, y);
+                lastCreationTime = currentTime;
+            }
+
+            lastX = x;
+            lastY = y;
+        });
+
+        // Matrix Rain Effect
+        function createMatrixRain() {
+            const container = document.getElementById('matrixBackground');
+            const characters = '01₹$€¥£+-*/=%';
+            const columnCount = Math.floor(window.innerWidth / 20);
+
+            for (let i = 0; i < columnCount; i++) {
+                const column = document.createElement('div');
+                column.className = 'matrix-column';
+                column.style.left = `${i * 20}px`;
+                column.style.animationDuration = `${3 + Math.random() * 5}s`;
+
+                let columnText = '';
+                for (let j = 0; j < 20; j++) {
+                    columnText += characters[Math.floor(Math.random() * characters.length)] + '<br>';
+                }
+                column.innerHTML = columnText;
+                container.appendChild(column);
+            }
+        }
+
+        // Floating Elements
+        function createFloatingElements() {
+            const container = document.getElementById('floatingElements');
+            const symbols = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'META', 'NFLX', 'NVDA'];
+            const trends = ['📈', '📉', '💹', '📊'];
+            const numbers = ['1.234', '+5.67%', '-2.89%', '10,234.56'];
+
+            function createElement(text, type) {
+                const element = document.createElement('div');
+                element.className = `floating-element ${type}`;
+                element.textContent = text;
+                element.style.top = `${Math.random() * 100}%`;
+                element.style.animationDelay = `-${Math.random() * 20}s`;
+                element.style.animationDuration = `${15 + Math.random() * 10}s`;
+                container.appendChild(element);
+            }
+
+            // Create multiple instances of each type
+            for (let i = 0; i < 10; i++) {
+                createElement(symbols[Math.floor(Math.random() * symbols.length)], 'symbol');
+                createElement(numbers[Math.floor(Math.random() * numbers.length)], 'number');
+                createElement(trends[Math.floor(Math.random() * trends.length)], 'trend');
+            }
+        }
+
+        // Glowing Orbs
+        function createOrbs() {
+            const container = document.getElementById('orbsContainer');
+            const colors = ['#00ff88', '#ff4d4d', '#4d88ff'];
+
+            for (let i = 0; i < 5; i++) {
+                const orb = document.createElement('div');
+                orb.className = 'orb';
+                orb.style.width = `${100 + Math.random() * 200}px`;
+                orb.style.height = orb.style.width;
+                orb.style.background = colors[Math.floor(Math.random() * colors.length)];
+                orb.style.left = `${Math.random() * 100}%`;
+                orb.style.top = `${Math.random() * 100}%`;
+                orb.style.animationDelay = `-${Math.random() * 15}s`;
+                container.appendChild(orb);
+            }
+        }
+
+        // Wave Charts Animation
+        function createWaves() {
+            const container = document.getElementById('waveContainer');
+            const waveCount = 8;
+
+            for (let i = 0; i < waveCount; i++) {
+                const wave = document.createElement('div');
+                wave.className = `wave ${Math.random() > 0.5 ? 'bearish' : ''}`;
+                wave.style.animationDelay = `${(i / waveCount) * 8}s`;
+                container.appendChild(wave);
+            }
+        }
+
+        // Price Points Animation
+        function createPricePoints() {
+            const container = document.getElementById('pricePointsContainer');
+            const prices = [
+                { symbol: 'BTC', price: '45,123.45' },
+                { symbol: 'ETH', price: '2,890.12' },
+                { symbol: 'AAPL', price: '178.34' },
+                { symbol: 'TSLA', price: '245.67' },
+                { symbol: 'GOOGL', price: '2,756.89' }
+            ];
+
+            function addPricePoint() {
+                const price = prices[Math.floor(Math.random() * prices.length)];
+                const isUp = Math.random() > 0.5;
+                const element = document.createElement('div');
+                element.className = `price-point ${isUp ? 'up' : 'down'}`;
+                element.textContent = `${price.symbol} $${price.price}`;
+                
+                const x = Math.random() * window.innerWidth;
+                const y = Math.random() * window.innerHeight;
+                const tx = (Math.random() - 0.5) * 200;
+                const ty = (Math.random() - 0.5) * 200;
+                
+                element.style.left = `${x}px`;
+                element.style.top = `${y}px`;
+                element.style.setProperty('--tx', `${tx}px`);
+                element.style.setProperty('--ty', `${ty}px`);
+                
+                container.appendChild(element);
+                setTimeout(() => element.remove(), 4000);
+            }
+
+            setInterval(addPricePoint, 300);
+        }
+
+        // Volume Bars Animation
+        function createVolumeBars() {
+            const container = document.getElementById('volumeContainer');
+            const barCount = Math.floor(window.innerWidth / 8);
+
+            for (let i = 0; i < barCount; i++) {
+                const bar = document.createElement('div');
+                bar.className = 'volume-bar';
+                bar.style.left = `${i * 8}px`;
+                bar.style.height = `${Math.random() * 100}%`;
+                bar.style.animationDelay = `${Math.random() * 2}s`;
+                container.appendChild(bar);
+            }
+        }
+
+        // Market Indicators Animation
+        function createMarketIndicators() {
+            const container = document.getElementById('indicatorsContainer');
+            const indicators = [
+                'NASDAQ ▲ 2.3%',
+                'S&P 500 ▼ 0.8%',
+                'DOW ▲ 1.5%',
+                'VIX ▼ 15.23',
+                'GOLD ▲ $1,892.45',
+                'OIL ▼ $75.34',
+                'EUR/USD ▲ 1.0892',
+                'RSI: 65.4',
+                'MACD: Bullish',
+                'Moving Avg (50d): Uptrend'
+            ];
+
+            function addIndicator() {
+                const text = indicators[Math.floor(Math.random() * indicators.length)];
+                const element = document.createElement('div');
+                element.className = 'market-indicator';
+                element.textContent = text;
+                element.style.top = `${Math.random() * 100}%`;
+                container.appendChild(element);
+                setTimeout(() => element.remove(), 6000);
+            }
+
+            setInterval(addIndicator, 2000);
+        }
+
+        // Advanced Candlestick Animation
+        class CandlestickAnimator {
+            constructor() {
+                this.container = document.getElementById('candlestickBackground');
+                this.rowCount = 5;
+                this.candlesPerRow = 15;
+                this.timeIntervals = ['1m', '5m', '15m', '30m', '1h'];
+                this.stockSymbols = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA'];
+                this.baseValues = {
+                    AAPL: 180,
+                    GOOGL: 2800,
+                    MSFT: 390,
+                    AMZN: 3400,
+                    TSLA: 250
+                };
+                this.init();
+            }
+
+            createCandlestick(symbol, index) {
+                const baseValue = this.baseValues[symbol];
+                const variance = baseValue * 0.002; // 0.2% variance
+                const open = baseValue + (Math.random() - 0.5) * variance;
+                const close = baseValue + (Math.random() - 0.5) * variance;
+                const high = Math.max(open, close) + Math.random() * variance * 0.5;
+                const low = Math.min(open, close) - Math.random() * variance * 0.5;
+                const isBullish = close > open;
+
+                const element = document.createElement('div');
+                element.className = 'candlestick-item';
+                element.style.height = '100px';
+
+                // Body
+                const body = document.createElement('div');
+                body.className = `candlestick-body ${isBullish ? '' : 'bearish'}`;
+                body.style.height = `${Math.abs(close - open) / (high - low) * 100}%`;
+                body.style.bottom = `${(Math.min(close, open) - low) / (high - low) * 100}%`;
+
+                // Wicks
+                const topWick = document.createElement('div');
+                topWick.className = 'candlestick-wick top';
+                topWick.style.height = `${(high - Math.max(open, close)) / (high - low) * 100}%`;
+
+                const bottomWick = document.createElement('div');
+                bottomWick.className = 'candlestick-wick bottom';
+                bottomWick.style.height = `${(Math.min(open, close) - low) / (high - low) * 100}%`;
+
+                // Volume
+                const volume = document.createElement('div');
+                volume.className = 'volume-indicator';
+                volume.style.background = isBullish ? '#00ff88' : '#ff4d4d';
+                volume.style.opacity = 0.2 + Math.random() * 0.3;
+
+                // Price Label
+                if (index === this.candlesPerRow - 1) {
+                    const label = document.createElement('div');
+                    label.className = 'price-label';
+                    label.textContent = `$${close.toFixed(2)}`;
+                    label.style.color = isBullish ? '#00ff88' : '#ff4d4d';
+                    label.style.right = '-50px';
+                    label.style.top = '50%';
+                    element.appendChild(label);
+                }
+
+                element.appendChild(body);
+                element.appendChild(topWick);
+                element.appendChild(bottomWick);
+                element.appendChild(volume);
+
+                return element;
+            }
+
+            createRow(index) {
+                const row = document.createElement('div');
+                row.className = 'candlestick-row';
+                row.style.top = `${index * 20}%`;
+
+                const symbol = this.stockSymbols[index];
+                const timeInterval = this.timeIntervals[index];
+
+                const group = document.createElement('div');
+                group.className = 'candlestick-group';
+
+                // Symbol Label
+                const symbolLabel = document.createElement('div');
+                symbolLabel.className = 'time-label';
+                symbolLabel.textContent = `${symbol} - ${timeInterval}`;
+                group.appendChild(symbolLabel);
+
+                for (let i = 0; i < this.candlesPerRow; i++) {
+                    const candlestick = this.createCandlestick(symbol, i);
+                    candlestick.style.animationDelay = `${i * 0.1}s`;
+                    group.appendChild(candlestick);
+                }
+
+                row.appendChild(group);
+                return row;
+            }
+
+            init() {
+                for (let i = 0; i < this.rowCount; i++) {
+                    this.container.appendChild(this.createRow(i));
+                }
+                this.startAnimation();
+            }
+
+            updateCandlesticks() {
+                const rows = this.container.querySelectorAll('.candlestick-row');
+                rows.forEach((row, rowIndex) => {
+                    const symbol = this.stockSymbols[rowIndex];
+                    const group = row.querySelector('.candlestick-group');
+                    
+                    // Remove first candlestick
+                    const firstCandlestick = group.querySelector('.candlestick-item');
+                    if (firstCandlestick) {
+                        firstCandlestick.remove();
+                    }
+
+                    // Add new candlestick
+                    const newCandlestick = this.createCandlestick(symbol, this.candlesPerRow - 1);
+                    group.appendChild(newCandlestick);
+                });
+            }
+
+            startAnimation() {
+                setInterval(() => this.updateCandlesticks(), 1000);
+            }
+        }
+
+        // Initialize animations
+        document.addEventListener('DOMContentLoaded', () => {
+            new CandlestickAnimator();
+            createMatrixRain();
+            createFloatingElements();
+            createOrbs();
+            updateNewsTicker();
+            createWaves();
+            createPricePoints();
+            createVolumeBars();
+            createMarketIndicators();
+
+            // Periodically update floating elements
+            setInterval(() => {
+                document.getElementById('floatingElements').innerHTML = '';
+                createFloatingElements();
+            }, 30000);
+        });
+
+        class MarketVisualizer {
+            constructor() {
+                this.container = document.getElementById('marketElements');
+                this.symbols = ['BTC', 'ETH', 'AAPL', 'GOOGL', 'TSLA', 'MSFT', 'AMZN', 'META'];
+                this.indicators = ['RSI', 'MACD', 'MA50', 'MA200', 'VOL'];
+                this.init();
+            }
+
+            createDataStream() {
+                const element = document.createElement('div');
+                element.className = 'data-stream';
+                
+                const type = Math.random();
+                if (type < 0.4) {
+                    // Price stream
+                    const symbol = this.symbols[Math.floor(Math.random() * this.symbols.length)];
+                    const price = (1000 + Math.random() * 9000).toFixed(2);
+                    const change = (Math.random() * 5 - 2.5).toFixed(2);
+                    element.className += ' price';
+                    element.innerHTML = `${symbol} $${price} (${change}%)`;
+                } else if (type < 0.7) {
+                    // Volume stream
+                    const symbol = this.symbols[Math.floor(Math.random() * this.symbols.length)];
+                    const volume = (Math.random() * 1000000).toFixed(0);
+                    element.className += ' volume';
+                    element.innerHTML = `VOL ${symbol}: ${volume}`;
+                } else {
+                    // Indicator stream
+                    const indicator = this.indicators[Math.floor(Math.random() * this.indicators.length)];
+                    const value = (Math.random() * 100).toFixed(2);
+                    element.className += ' indicator';
+                    element.innerHTML = `${indicator}: ${value}`;
+                }
+
+                element.style.top = `${Math.random() * 100}%`;
+                element.style.animationDuration = `${10 + Math.random() * 10}s`;
+                
+                this.container.appendChild(element);
+                setTimeout(() => element.remove(), 20000);
+            }
+
+            createMarketPulse() {
+                const element = document.createElement('div');
+                element.className = `market-pulse ${Math.random() > 0.5 ? 'bearish' : ''}`;
+                element.style.left = `${Math.random() * 100}%`;
+                element.style.top = `${Math.random() * 100}%`;
+                
+                this.container.appendChild(element);
+                setTimeout(() => element.remove(), 2000);
+            }
+
+            createTrendLine() {
+                const element = document.createElement('div');
+                element.className = `trend-line ${Math.random() > 0.5 ? 'bearish' : ''}`;
+                element.style.top = `${Math.random() * 100}%`;
+                element.style.width = `${100 + Math.random() * 200}px`;
+                element.style.transform = `rotate(${Math.random() * 60 - 30}deg)`;
+                
+                this.container.appendChild(element);
+                setTimeout(() => element.remove(), 8000);
+            }
+
+            init() {
+                // Create data streams
+                setInterval(() => this.createDataStream(), 500);
+                
+                // Create market pulses
+                setInterval(() => this.createMarketPulse(), 2000);
+                
+                // Create trend lines
+                setInterval(() => this.createTrendLine(), 1000);
+            }
+        }
+
+        // Initialize visualizations
+        document.addEventListener('DOMContentLoaded', () => {
+            new MarketVisualizer();
+            // ... rest of initialization code ...
+        });
+
+        class LiveChartAnimator {
+            constructor() {
+                this.container = document.getElementById('liveChart');
+                this.symbols = ['AAPL', 'GOOGL', 'MSFT', 'AMZN', 'TSLA', 'META'];
+                this.candlesPerChart = 30;
+                this.init();
+            }
+
+            createCandlestick() {
+                const element = document.createElement('div');
+                element.className = 'candlestick';
+
+                const isGreen = Math.random() > 0.5;
+                const height = 20 + Math.random() * 60;
+                const wickTop = Math.random() * 20;
+                const wickBottom = Math.random() * 20;
+
+                const body = document.createElement('div');
+                body.className = `candlestick-body ${isGreen ? '' : 'red'}`;
+                body.style.height = `${height}px`;
+
+                const topWick = document.createElement('div');
+                topWick.className = 'candlestick-wick top';
+                topWick.style.height = `${wickTop}px`;
+
+                const bottomWick = document.createElement('div');
+                bottomWick.className = 'candlestick-wick bottom';
+                bottomWick.style.height = `${wickBottom}px`;
+
+                element.appendChild(body);
+                element.appendChild(topWick);
+                element.appendChild(bottomWick);
+
+                return element;
+            }
+
+            createChartColumn(symbol) {
+                const column = document.createElement('div');
+                column.className = 'chart-column';
+
+                const title = document.createElement('div');
+                title.className = 'chart-title';
+                title.textContent = symbol;
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'candlestick-wrapper';
+
+                for (let i = 0; i < this.candlesPerChart; i++) {
+                    wrapper.appendChild(this.createCandlestick());
+                }
+
+                column.appendChild(title);
+                column.appendChild(wrapper);
+                return column;
+            }
+
+            init() {
+                this.symbols.forEach(symbol => {
+                    this.container.appendChild(this.createChartColumn(symbol));
+                });
+                this.startAnimation();
+            }
+
+            startAnimation() {
+                setInterval(() => {
+                    const wrappers = document.querySelectorAll('.candlestick-wrapper');
+                    wrappers.forEach(wrapper => {
+                        const firstCandle = wrapper.firstChild;
+                        if (firstCandle) {
+                            firstCandle.remove();
+                        }
+                        wrapper.appendChild(this.createCandlestick());
+                    });
+                }, 1000);
+            }
+        }
+
+        // Processing Animation
+        class ProcessingAnimation {
+            constructor() {
+                this.overlay = document.getElementById('processingOverlay');
+                this.steps = Array.from(document.querySelectorAll('.step'));
+                this.currentStep = 0;
+            }
+
+            start() {
+                this.overlay.style.display = 'flex';
+                this.processSteps();
+            }
+
+            processSteps() {
+                const stepDuration = 1000;
+                
+                const processStep = () => {
+                    if (this.currentStep < this.steps.length) {
+                        this.steps.forEach(step => step.classList.remove('active'));
+                        this.steps[this.currentStep].classList.add('active');
+                        this.currentStep++;
+                        setTimeout(processStep, stepDuration);
+                    } else {
+                        setTimeout(() => {
+                            this.overlay.style.display = 'none';
+                            this.steps.forEach(step => step.classList.remove('active'));
+                        }, stepDuration);
+                    }
+                };
+
+                processStep();
+            }
+        }
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', () => {
+            const liveChart = new LiveChartAnimator();
+            const processingAnim = new ProcessingAnimation();
+
+            // Handle form submission
+            const form = document.getElementById('stockForm');
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const button = form.querySelector('button');
+                button.classList.add('processing');
+                processingAnim.start();
+
+                // Submit form after processing animation
+                setTimeout(() => {
+                    button.classList.remove('processing');
+                    form.submit();
+                }, 6000);
+            });
+        });
+    </script>
+</body>
+</html>
